@@ -1,8 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
 using NAudio.Wave;
 
 class CybersecurityBot
 {
+    static string userName = "Guest";
+    static string userInterest = "";
+    static string lastTopic = "";
+
+    static Dictionary<string, string> keywordResponses = new Dictionary<string, string>
+    {
+        { "password", "Make sure to use strong, unique passwords for each account. Avoid using personal details." },
+        { "scam", "Watch out for online scams. Never click suspicious links or share personal information with unknown sources." },
+        { "privacy", "Protect your privacy by reviewing your app permissions and adjusting your account security settings." },
+        { "firewall", "A firewall helps prevent unauthorized access to or from a private network. Always keep it enabled." }
+    };
+
+    static List<string> phishingTips = new List<string>
+    {
+        "Be cautious of emails asking for personal info. Check the sender's email.",
+        "Never click on links in suspicious messages, even if they look official.",
+        "Hover over links to preview URLs before clicking.",
+        "Avoid downloading attachments from unknown sources."
+    };
+
     static void Main(string[] args)
     {
         // Display a visually enhanced chatbot UI
@@ -10,14 +31,8 @@ class CybersecurityBot
 
         // Play a voice greeting at the start
         PlayGreetingAudio();
-
-        // Display ASCII art header
         ShowASCIIArt();
-
-        // Welcome user by asking for their name
         WelcomeUser();
-
-        // Respond to user input with basic responses
         RespondToQuestions();
     }
 
@@ -60,12 +75,7 @@ class CybersecurityBot
     {
         try
         {
-            // Specify the path to your greeting.wav file
-            string filePath = @"C:\Users\RC_Student_lab\source\repos\POEPart1\bin\Debug\net8.0\greeting.wav";  // Replace this with the actual path to the audio file
-                                                                // If the file is located in the same directory as your executable, you can use a relative path like:
-                                                                // string filePath = "greeting.wav";
-
-            // Using NAudio to play the audio
+            string filePath = @"greeting.wav"; // Change this to your actual path
             using (var audioFile = new AudioFileReader(filePath))
             using (var outputDevice = new WaveOutEvent())
             {
@@ -85,7 +95,24 @@ class CybersecurityBot
         }
     }
 
-    // Welcome the user and ask for their name
+    static void ShowASCIIArt()
+    {
+        string asciiArt = @"
+  .----------------.  .----------------.  .----------------.  .----------------. 
+ | .--------------. || .--------------. || .--------------. || .--------------. |
+ | |   ______     | || |  ____  ____  | || |   ______     | || |  _________   | |
+ | |  |_   __ \   | || | |_  _||_  _| | || |  |_   _ \    | || | |_   ___  |  | |
+ | |    | |__) |  | || |   \ \  / /   | || |    | |_) |   | || |   | |_  \_|  | |
+ | |    |  ___/   | || |    \ \/ /    | || |    |  __'.   | || |   |  _|  _   | |
+ | |   _| |_      | || |    _|  |_    | || |   _| |__) |  | || |  _| |___/ |  | |
+ | |  |_____|     | || |   |______|   | || |  |_______/   | || | |_________|  | |
+ | '--------------' || '--------------' || '--------------' || '--------------' |
+  '----------------'  '----------------'  '----------------'  '----------------' ";
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine(asciiArt);
+        Console.ResetColor();
+    }
+
     static void WelcomeUser()
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
@@ -95,79 +122,107 @@ class CybersecurityBot
         Console.Write("What is your name? ");
         string name = Console.ReadLine();
 
-        if (string.IsNullOrEmpty(name))
-        {
-            name = "Guest";
-        }
-
-        Console.WriteLine($"Hello, {name}! I'm here to help you stay safe online.");
+        Console.WriteLine($"Hello, {userName}! I'm here to help you stay safe online.");
         Console.WriteLine("Ask me anything about cybersecurity!");
     }
 
-    // Basic response system for user queries
     static void RespondToQuestions()
     {
         string input = "";
-        while (input.ToLower() != "exit")
+        while (true)
         {
             Console.Write("\nYou: ");
             input = Console.ReadLine();
 
             if (string.IsNullOrWhiteSpace(input))
             {
-                Console.WriteLine("I didn't quite understand that. Could you rephrase?");
+                Console.WriteLine("Bot: I didn't quite understand that. Could you rephrase?");
+                continue;
             }
-            else if (input.ToLower() == "how are you?")
+
+            string lowerInput = input.ToLower();
+
+            if (lowerInput == "exit") break;
+
+            // Sentiment detection
+            if (lowerInput.Contains("worried"))
             {
-                Console.WriteLine("Bot: I'm doing great! Thanks for asking. How about you?");
+                Console.WriteLine("Bot: It's okay to feel that way. Cybersecurity can be scary, but I'm here to help.");
+                continue;
             }
-            else if (input.ToLower() == "what’s your purpose?")
+            else if (lowerInput.Contains("curious"))
             {
-                Console.WriteLine("Bot: My purpose is to help you stay safe online by providing tips and advice about cybersecurity.");
+                Console.WriteLine("Bot: Curiosity is great! Ask me anything about cybersecurity.");
+                continue;
             }
-            else if (input.ToLower() == "what can i ask you about?")
+            else if (lowerInput.Contains("frustrated"))
             {
-                Console.WriteLine("Bot: You can ask me about password safety, phishing, safe browsing, and more!");
+                Console.WriteLine("Bot: I understand your frustration. Let’s take it one step at a time.");
+                continue;
             }
-            else if (input.ToLower().Contains("password"))
+
+            // Store user interest
+            if (lowerInput.Contains("interested in"))
             {
-                Console.WriteLine("Bot: A strong password is key to securing your accounts. Use a combination of letters, numbers, and symbols.");
+                int idx = lowerInput.IndexOf("interested in") + "interested in".Length;
+                userInterest = input.Substring(idx).Trim();
+                Console.WriteLine($"Bot: Great! I'll remember that you're interested in {userInterest}.");
+                lastTopic = userInterest;
+                continue;
             }
-            else if (input.ToLower().Contains("phishing"))
+
+            if (lowerInput.Contains("remind me") && !string.IsNullOrEmpty(userInterest))
             {
-                Console.WriteLine("Bot: Phishing attacks are attempts to steal personal information by pretending to be trustworthy. Always verify the sender’s email address.");
+                Console.WriteLine($"Bot: You mentioned you're interested in {userInterest}. Would you like to learn more?");
+                continue;
             }
-            else if (input.ToLower().Contains("safe browsing"))
+
+            if (lowerInput.Contains("more info") && !string.IsNullOrEmpty(lastTopic))
             {
-                Console.WriteLine("Bot: Always ensure you're visiting trusted websites and avoid clicking on suspicious links.");
+                Console.WriteLine($"Bot: Here's more on {lastTopic}: {GetExtendedInfo(lastTopic)}");
+                continue;
             }
-            else if (input.ToLower().Contains("firewall"))
+
+            if (lowerInput.Contains("phishing tip"))
             {
-                Console.WriteLine("Bot: A firewall is a security system that monitors and controls incoming and outgoing network traffic. It’s essential for protecting your system from cyber threats.");
+                Random rand = new Random();
+                int index = rand.Next(phishingTips.Count);
+                Console.WriteLine("Bot: " + phishingTips[index]);
+                lastTopic = "phishing";
+                continue;
             }
-            else if (input.ToLower() == "take a quiz")
+
+            if (HandleKeywordResponse(lowerInput)) continue;
+
+            // Command handling
+            switch (lowerInput)
             {
                 StartQuiz();
-            }
-            else if (input.ToLower() == "security tip")
-            {
+                    break;
+                case "security tip":
                 ShowSecurityTip();
-            }
-            else if (input.ToLower() == "news")
-            {
+                    break;
+                case "news":
                 ShowCybersecurityNews();
-            }
-            else if (input.ToLower() == "checklist")
-            {
+                    break;
+                case "checklist":
                 ShowSecurityChecklist();
-            }
-            else if (input.ToLower() == "myths")
-            {
+                    break;
+                case "myths":
                 ShowCybersecurityMyths();
             }
-            else
+        }
+    }
+
+    static bool HandleKeywordResponse(string input)
             {
-                Console.WriteLine("Bot: I'm not sure about that. Could you ask something else?");
+        foreach (var keyword in keywordResponses.Keys)
+        {
+            if (input.Contains(keyword))
+            {
+                Console.WriteLine("Bot: " + keywordResponses[keyword]);
+                lastTopic = keyword;
+                return true;
             }
         }
     }
